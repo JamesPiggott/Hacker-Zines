@@ -1,0 +1,264 @@
+
+
+                                                       ┌───────────────────────┐
+                                                       ▄▄▄▄▄ ▄▄▄▄▄ ▄▄▄▄▄       │
+                                                       │ █   █ █ █ █   █       │
+                                                       │ █   █ █ █ █▀▀▀▀       │
+                                                       │ █   █   █ █     ▄     │
+                                                       │                 ▄▄▄▄▄ │
+                                                       │                 █   █ │
+                                                       │                 █   █ │
+                                                       │                 █▄▄▄█ │
+                                                       │                 ▄   ▄ │
+                                                       │                 █   █ │
+                                                       │                 █   █ │
+                                                       │                 █▄▄▄█ │
+                                                       │                 ▄▄▄▄▄ │
+                                                       │                   █   │
+BGGP5 Recap                                            │                   █   │
+~ Binary Golf Association                              └───────────────────█ ──┘
+
+─── BGGP5 Wrapped ──────────────────────────────────────────────────────────\\──
+
+Wow! Another year, another BGGP. The theme this year was "Download". The goal
+was to download a file from the Binary Golf website (https://binary.golf/5/5)
+and display it in some way.
+
+We got over 120 entries and 50 file formats! We had a number of new file
+formats, including Adobe ExtendScript, Erlang BEAM Bytecode, LaTeX, and
+LLVM-IR.
+
+Let's get into what happened!
+
+::: Approaches To The Challenge ::::::::::::::::::::::::::::::::::::::::::::::::
+
+This was our example entry:
+
+    #!/bin/sh
+    wget https://binary.golf/5/5
+    cat 5
+
+And expected output:
+
+    $ ./bggp5.sh
+    Another #BGGP5 download!! @binarygolf https://binary.golf
+
+Downloading a file seems simple enough right? You do this every day, and it Just
+Works. When you think about it, there is actually a lot more work going on.
+
+A classic interview question is "What happens when you type google.com into your
+browser and press enter?". You can go infinitely into the weeds on this, from
+the prefrontal and parietal cortex planning the movement of your fingers, to
+the premotor and motor cortex sequencing and sending commands to move your
+fingers, to even more low level biological and atomic actions involved in your
+brain and the CPU you are interfacing with. For our purposes, we want to know
+what you need from a computer's perspective to download a file.
+
+The basic steps are:
+
+- Resolve the domain with a DNS query
+- Create a TCP Socket using the system's socket APIs.
+- Perform a TLS Handshake with the host
+- Send an HTTP GET Request
+- Read the response
+- Display the contents
+
+Depending on your target system and file format, some of these steps many be
+handled for you.
+
+The file to download in this challenge was hosted on the Binary Golf website,
+which uses TLS and is served via Github. This was one of the more significant
+hurdles for BGGP5, as code that can negotiate TLS or other cryptographic APIs
+can add a non-trivial amount of bytes and complexity to a given entry.
+
+Let's take a look at how golfers approached this and other aspects of the
+challenge!
+
+::: Living Off The Land ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+While many programming languages and libraries offer APIs to download content
+from the internet, many golfers opted to use binaries or features that are
+usually already on a given target system.
+
+Curl seemed to be the most popular choice for this, as it is common on Linux,
+MacOS, and even Windows, and has been compiled for 101 operating systems and
+28 CPU architectures and counting. Since it can handle all the TLS negotiation
+for you, and the default behavior is to display the content from the host, it
+was an obvious choice for many.
+
+Others went with OpenSSL, which can be used to establish TLS connections and
+allow users to send/receive HTTP requests and responses. An impressive example
+was neuschaefer's ELF written in ARM Jazelle DBX, using OpenSSL to get the file.
+
+bah's entry implemented a wild dynamic linking idea that patched /bin/bash in
+memory and overwrote main() with code to dlopen() libssl, then call it to
+download the file.
+
+retr0id used KTLS and Linux Kernel Crypto APIs to make a static aarch64
+userland curl implementation that calls these APIs. While the file itself was
+3043 bytes, it demonstrated interesting use of cryptography in the kernel.
+
+::: To Arg Or Not To Arg? ::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+One of the key distinctions for this and other BGGP challenges was whether or
+not an entry uses command line arguments. Environment variables can also be used
+to hold data and code. For each file format, entries that used arguments or
+environment variables were scored separately from entries that were a standalone
+file. The URL for file to download was 23 bytes, so using arguments or env vars
+made sense to make an entry even smaller.
+
+::: URL Shorteners :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+We didn't explicitly ban URL shorteners or small domain names because we didn't
+want to limit how small people could go, or limit people targeting systems and
+formats that predate SSL/TLS and required a proxy. Many people flexed their 5 or
+6 byte domain names.
+
+::: File Name Hax ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+Another approach that helped people save space this year was to use the filename
+as code.
+
+continue won python without args (and pyc), by executing the entire filename as
+a script.
+
+mebeim and Digoguenes used the filesystem itself to store the URL with their PHP
+entries, by creating directories that pointed to binary.golf/5/5
+
+gremlinbeet's 3 byte batch file entry ran a powershell script from the filename,
+which caused the system to reboot and display the contents from a text file on
+next boot.
+
+Luna Hart's 2 byte shell script stored the entire command in the filename, and
+executed with a simple $0.
+
+jbo also did a 2 byte shell script with arguments that executed $1.
+
+::: 0 Bytes ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+In previous years, we have explicitly states that 0 byte files weren't allowed.
+This year, we forgot to put that in the challenge, and as a result, got some
+cool "0 byte" files that achieved the goal. In future BGGP challenges, we can
+make a one liner category to collect some of these cool tricks!
+
+─── AWARDS ─────────────────────────────────────────────────────────────────\\──
+
+::: Most Popular File Format :::::::::::::::::::::::::::::::::::::::::::::::::::
+
+ELF had 12 entries across all the subdivisions.
+
+::: Smallest Entry :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+Tie between Luna Hart (2 byte shell script no args) and JBO (2 byte shell script
+with args).
+
+::: Most Entries :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+The top 3 golfers with the most entries were:
+- mattpass - 9
+- jbo - 8
+- tied for third: caioluders, mebeim, and vvx7 with 6 each
+
+::: 4x Category Winners ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+4 golfers had wins in 4 categories.
+
+caioluders
+- Burp Suite Settings JSON
+- Nuclei Template
+- Radare2
+- SVG
+
+jbo
+- java class
+- shellcode
+- shell script (with args)
+- shell script / shellcode polyglot
+
+Krishean
+- awk (no args)
+- Makefile
+- PHP (with args)
+- Batch / PHP polyglot (with args)
+
+qkumba
+- COM
+- PE 32 for Windows XP and earlier
+- PE 32
+- PE 64
+
+::: 3x Category Winners ::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+6 golfers had wins in 3 categories
+
+bah
+- llvm-ir
+- Awk (with args)
+- m3u
+
+continue
+- HTTP
+- Python (no args)
+- Python pyc (no args)
+
+luskabol
+- Julia
+- LaTeX
+- NodeJS (no args)
+
+mebeim
+- Go (with args)
+- UEFI
+- ELF 32 (with args)
+
+theXappy
+- Adobe ExtendScript
+- NuGet Package
+- VSCode Workspace
+
+VINSERTF128
+- ELF 32 (no args)
+- ELF 64 (with args)
+- ELF 64 (no args)
+
+::: Wildest Entry ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+qkumba wins the award for "Wildest Entry" with his absolutely mad COM file
+written in 16 bit x86 assembly. The submission itself is a base64 string,
+with a base64 decoder in the code, that you can paste into notepad and
+execute. Golf claps for qkumba all around.
+
+─── Looking Forward ────────────────────────────────────────────────────────\\──
+
+We made a few changes this year to our process to try to make things easier for
+both golfers and verifiers. This year we started using git issues on the BGGP
+repo to track entries, verification, and discussion around them. It also makes
+it easier for verifiers to track the status of an entry or any changes/updates
+to it.
+
+Verifying the entries this year took a bit longer than expected for a variety of
+reasons. There will be a follow up blog to this about ways we plan to improve,
+and ways you can get involved and tell us what you would like to see in the
+future. Follow the Binary Golf Association on socials for more info!
+
+We also have a new experimental tool to process BGGPx entry files. Feel free to
+play with it and help us improve! https://github.com/binarygolf/bggp-tools
+
+BGGP is becoming a lot more well known, with entries being cited in papers, used
+for testing by organizations and companies, and increasing coverage in media
+outlets. The more accessible we can make our data set, the better.
+
+─── Thank Yous ─────────────────────────────────────────────────────────────\\──
+
+Thank you to our wonderful verifier team! This would not have been possible
+without you all! 0xNinja, ackmage, ic3qu33n, ifygecko, lenartlola, m33ls,
+netspooky, qkumba, retr0id, riesha, rqu, samwcyo, VVX7, XfavataX
+
+Thank you to all the people who submitted entries this year.
+
+Thanks to YOU for supporting Binary Golf and the Binary Golf Grand Prix.
+
+Weird & Tiny Files Forever!!!
+
+~ netspooky / Binary Golf Association
+
